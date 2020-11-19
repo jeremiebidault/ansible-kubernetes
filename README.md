@@ -52,4 +52,5 @@ clean kubernetes, etcd, haproxy and keepalived config
 
 - make remove role
 - replace certs files by facts
+- untaint hosts that are in kube-master && kube-node
 - many more...
