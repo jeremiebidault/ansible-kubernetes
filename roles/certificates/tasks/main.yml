@@ -1,0 +1,35 @@
+- name: Import ca-config.json
+  copy:
+    src: ca-config.json
+    dest: ca-config.json
+
+- name: Import ca-csr.json
+  copy:
+    src: ca-csr.json
+    dest: ca-csr.json
+
+- name: Gen ca cert
+  shell: |
+    cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
+- name: Import client-csr.json
+  template:
+    src: client-csr.json.j2
+    dest: client-csr.json
+  vars:
+    hosts: "{{ groups['etcd'] }}"
+
+- name: Gen client cert
+  shell: |
+    cfssl gencert -config ca-config.json -ca ca.pem -ca-key ca-key.pem client-csr.json | cfssljson -bare client
+
+- name: Export certificates
+  fetch:
+    src: "{{ item }}"
+    dest: ./
+    flat: yes
+  with_items:
+    - ca.pem
+    - ca-key.pem
+    - client.pem
+    - client-key.pem

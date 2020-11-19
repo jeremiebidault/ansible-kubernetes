@@ -1,0 +1,8 @@
+{
+  "CN": "my-awesome-cert",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "hosts": [{% for host in hosts %}"{{ hostvars[host].ip }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+}

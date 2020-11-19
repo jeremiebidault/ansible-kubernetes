@@ -1,0 +1,20 @@
+#- name: Get master join command
+#  copy:
+#    src: master.sh
+#    dest: master.sh
+#    mode: 0777
+
+- name: Check initialization
+  stat: 
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
+
+- name: Join cluster
+  command: "{{ hostvars[groups['candidate'][0]].master }}"
+  when: kubelet.stat.exists == false
+
+- name: Copy config
+  shell: |
+    mkdir -p $HOME/.kube
+    cp /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config

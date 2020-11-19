@@ -1,0 +1,38 @@
+- hosts: remove
+  roles:
+    - remove
+
+- hosts: all
+  roles:
+    - bootstrap
+    - docker
+    - kubernetes
+
+- hosts: kube-master
+  roles:
+    - keepalived
+    - haproxy
+
+- hosts: etcd[0]
+  roles:
+    - certificates
+
+- hosts: etcd
+  roles:
+    - etcd
+
+- hosts: kube-master
+  roles:
+    - candidate
+
+- hosts: candidate[0]
+  roles:
+    - init
+
+- hosts: kube-master
+  roles:
+    - master
+
+- hosts: kube-node
+  roles:
+    - node

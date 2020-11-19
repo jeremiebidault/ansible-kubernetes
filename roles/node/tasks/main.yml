@@ -1,0 +1,14 @@
+#- name: Get node join command
+#  copy:
+#    src: node.sh
+#    dest: node.sh
+#    mode: 0777
+
+- name: Check initialization
+  stat: 
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
+
+- name: Join cluster
+  command: "{{ hostvars[groups['candidate'][0]].node }}"
+  when: kubelet.stat.exists == false

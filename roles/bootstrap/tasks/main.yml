@@ -1,0 +1,36 @@
+- name: Install epel release
+  yum:
+    name: epel-release
+    state: present
+    update_cache: yes
+
+- name: Install default packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - nano
+      - git
+      - tree
+      - wget
+      - curl
+      - jq
+
+- name: Install cfssl
+  shell: |
+    curl -L https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 -o cfssl
+    chmod +x cfssl
+    mv cfssl /usr/local/bin/
+    curl -L https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64 -o cfssljson
+    chmod +x cfssljson
+    mv cfssljson /usr/local/bin/
+
+- name: Hosts file
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^.*{{ ip }}.*$"
+    line: "{{ ip }} {{ inventory_hostname }}"
+    state: present
+  with_items: "{{ groups['all'] }}"

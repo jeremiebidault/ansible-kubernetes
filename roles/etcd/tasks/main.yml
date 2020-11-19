@@ -1,0 +1,42 @@
+- name: Install etcd
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - etcd
+
+- name: Import certificates
+  copy:
+    src: "{{ item }}"
+    dest: /etc/etcd/{{ item }}
+  with_items:
+    - ca.pem
+    - ca-key.pem
+    - client.pem
+    - client-key.pem
+
+- name: Etcd config
+  template:
+    src: etcd.conf.j2
+    dest: /etc/etcd/etcd.conf
+  vars:
+    master: "{{ groups['etcd'] }}"
+
+- name: Etcd service
+  copy:
+    src: etcd.service
+    dest: /lib/systemd/system/etcd.service
+
+- name: Start && enable etcd
+  systemd:
+    name: etcd
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Cluster check
+  shell: |
+    etcdctl --endpoints https://{{ ip }}:2379 --cert-file /etc/etcd/client.pem --ca-file /etc/etcd/ca.pem --key-file /etc/etcd/client-key.pem cluster-health
+    etcdctl --endpoints https://{{ ip }}:2379 --cert-file /etc/etcd/client.pem --ca-file /etc/etcd/ca.pem --key-file /etc/etcd/client-key.pem member list

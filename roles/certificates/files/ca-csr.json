@@ -1,0 +1,7 @@
+{
+  "CN": "my-awesome-cert",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}

@@ -1,0 +1,48 @@
+- name: Install mandatory packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+
+- name: Add docker-ce repository
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: 0644
+
+- name: Install docker
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+
+- name: Create mandatory directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/docker
+    - /etc/systemd/system/docker.service.d
+
+- name: Import daemon.json
+  copy:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+  run_once: true
+
+- name: Start && enable docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon_reload: yes

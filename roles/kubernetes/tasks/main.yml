@@ -1,0 +1,50 @@
+- name: Disable selinux
+  selinux:
+    state: disabled
+  
+- name: Add kubernetes repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes repo
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgcheck: yes
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    exclude: kube*
+
+- name: Add br_netfilter module
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Set net.bridge values
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    state: present
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+
+- name: Install kubernetes
+  yum:
+    name: "{{ packages }}"
+    state: present
+    disable_excludes: kubernetes
+    update_cache: yes
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+- name: Start && enable kubernetes
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes
+
+- name: Add kubectl completion
+  lineinfile:
+    path: /root/.bashrc
+    regexp: 'kubectl\scompletion\sbash'
+    line: 'source <(kubectl completion bash)'

@@ -1,0 +1,21 @@
+- name: Check initialization
+  stat: 
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
+
+- name: Get initialized candidates
+  add_host:
+    hostname: "{{ inventory_hostname }}"
+    groups: candidate
+  when: kubelet.stat.exists == true
+
+- name: Check initialization
+  stat: 
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
+
+- name: Get clean candidates
+  add_host:
+    hostname: "{{ inventory_hostname }}"
+    groups: candidate
+  when: kubelet.stat.exists == false

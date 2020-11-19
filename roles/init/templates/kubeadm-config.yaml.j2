@@ -1,0 +1,18 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: stable
+apiServer:
+  certSANs:
+  - "{{ apiserver_vip }}"
+controlPlaneEndpoint: "{{ apiserver_vip }}:{{ apiserver_dest_port }}"
+etcd:
+  external:
+      endpoints:
+      {% for host in hosts -%}
+      - https://{{ hostvars[host].ip }}:2379
+      {% endfor -%}
+      caFile: {{ caFile }}
+      certFile: {{ certFile }}
+      keyFile: {{ keyFile }}
+networking:
+    podSubnet: {{ podSubnet }}

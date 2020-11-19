@@ -1,0 +1,53 @@
+- name: Gen config
+  template:
+    src: kubeadm-config.yaml.j2
+    dest: kubeadm-config.yaml
+  vars:
+    hosts: "{{ groups['kube-master'] }}"
+
+- name: Check initialization
+  stat: 
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
+
+- name: Init master
+  command: kubeadm init --config=kubeadm-config.yaml
+  when: kubelet.stat.exists == false
+
+- name: Copy config
+  shell: |
+    mkdir -p $HOME/.kube
+    cp /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+
+- name: Install weave
+  shell: |
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')&env.IPALLOC_RANGE={{ podSubnet }}"
+
+- name: Gen token
+  command: kubeadm token create --print-join-command
+  register: token
+
+- name: Gen certs
+  command: kubeadm init phase upload-certs --upload-certs --config kubeadm-config.yaml
+  register: certs
+
+#- name: Gen node join command
+#  local_action:
+#    module: copy
+#    content: "{{ token.stdout_lines[-1] }}"
+#    dest: node.sh
+
+#- name: Gen master join command
+#  local_action:
+#    module: copy
+#    content: "{{ token.stdout_lines[-1] }} --control-plane --certificate-key {{ certs.stdout_lines[-1] }}"
+#    dest: master.sh
+
+- name: Gen node join command
+  set_fact:
+    node: "{{ token.stdout_lines[-1] }}"
+
+- name: Gen master join command
+  set_fact:
+    master: "{{ token.stdout_lines[-1] }} --control-plane --certificate-key {{ certs.stdout_lines[-1] }}"

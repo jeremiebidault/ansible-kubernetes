@@ -1,0 +1,24 @@
+- name: Install packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - keepalived
+
+- name: Keepalived conf
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: Keepalived check
+  template:
+    src: check_apiserver.sh.j2
+    dest: /etc/keepalived/check_apiserver.sh.j2
+    mode: u+x
+
+- name: Start && enable keepalived
+  systemd:
+    name: keepalived
+    state: started
+    enabled: yes
