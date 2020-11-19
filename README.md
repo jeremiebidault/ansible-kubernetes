@@ -1,8 +1,11 @@
 # kubernetes deployment
 
 OS : centos
+
 container runtime : docker
+
 container network interface : weave
+
 high availability : keepalived && haproxy
 
 # roles
